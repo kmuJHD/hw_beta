@@ -3,7 +3,21 @@
 *   홍현표 김상원 조심재
 *   Warning
 *   Linux 기반이므로 window 환경에서는 실행이 되지 않습니다.
-*   PPT 에코 클라이언트 참고
+*   
+*   참고사항
+*   1. 모든 패킷은 문자열 상태로 전송됨. 기본적으로 패킷을 받아서 문자열의 1byte는 type을 나타내기 때문에 이를 
+*   구분하여 내구 동작을 작성하여야 함. 따로 함수를 만들어도 되고 main문에서 처리하여도 되나 코드를 읽기 쉽게
+*   함수로 구현하는 쪽이 좋음. 대부분 구조체 형태는 types.h에 명시되어 있으니 참고.
+*   
+*   클라이언트에서 구현해야 하는 기능
+*   1. 질문에 대한 응답을 받아 결과와 수준을 확인하여 그에 맞게 출력
+*   2. 질문에 대해서 서버가 수정된 질문을 보내올 경우 그 패킷에 들어있는 데이터를 분리해서 정확도 순으로 출력
+*   3. 갱신 패킷이 오면 2번과 마찮가지로 데이터를 추출해 순위순으로 출력
+*
+*   대략적인 순서(정확하지 않음)
+*   질문, 갱신 패킷 전송 -> 응답 & 갱신 수락 패킷 수신 -> 응답 패킷 헤더 체크후 그에 맞게 출력 ->
+*   갱신 패킷 체크 후 출력 -> 다음 질문 대기
+*
 */
 
 #include <stdio.h>
@@ -47,8 +61,7 @@ main()
     char sndBuffer[BUFSIZ], rcvBuffer[BUFSIZ];
     CP_Question question;
     CP_Renew renew;
-   
-    
+
     memset(&c_addr, 0, sizeof(c_addr));
     c_addr.sin_addr.s_addr = inet_addr("127.0.0.1");
     c_addr.sin_family = AF_INET;
@@ -66,7 +79,6 @@ main()
             return -1;
         }
         
-        
         //질문을 입력받아 sndBuffer에 입력
         printf("질문 : ");
         fgets(sndBuffer, sizeof(sndBuffer), stdin); 
@@ -78,17 +90,17 @@ main()
         //------보내고자 하는 패킷을 구성------//
         question.type = '0';
         question.detail = '0';
-        question.grade = '0';
         strcpy(question.data, sndBuffer);
+        question.grade = '0';
         
         
-        //testing
+        //어디까지나 예제로 변경될 수 있으나 기본적으로 문자열 형태로 변환하여 서버에 전송함
         int strlength = 0;
         
         strlength += sizeof(question.type);
         strlength += sizeof(question.detail);
-        strlength += sizeof(question.grade);
         strlength += strlen(question.data);
+        strlength += sizeof(question.grade);
                 
         char *sndString;
         
@@ -99,13 +111,9 @@ main()
         sndString[2] = question.grade;
         strcat(sndString, question.data);        
         
+        //test용 출력 - 동적 할당된 문자열
         printf("%s %d\n", sndString, strlength);
-        /*
-        strcat(sndString, question.type);
-        strcat(sndString, question.detail);
-        strcat(sndString, question.data);
-        strcat(sndString, question.grade);
-        */
+       
         
         //-----------CP_QUESTION----------//
         
@@ -128,10 +136,12 @@ main()
         }
         */
         
+        
         /*  개선안      
         *   기존에 구조체를 전송하게 되면 낭비되는 byte가 많아서 동적 할당을 통해 문자열을 생성하고
         *   패킷의 크기에 맞게 전송하도록 개선
         */   
+        
         /*  패킷을 보낼때 send함수를 통해 동적 할당한 sndString 문자열을 전송 strlengths는
         *   위에서 계산한 sndString의 크기임
         */
