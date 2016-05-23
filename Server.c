@@ -60,10 +60,7 @@ main()
         
         rcvBuffer[numBytesRcvd] = '\0';
 
-        char *here;
-        here = rcvBuffer;        
-        
-        printf("Server : %s\n", here);
+        printf("Server : %s\n", rcvBuffer);
         
         
         close(c_socket);
