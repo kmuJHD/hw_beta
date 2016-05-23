@@ -77,12 +77,39 @@ main()
         question.detail = '0';
         strcpy(question.data, sndBuffer);
         question.grade = '0';
+        
+        
+        //testing
+        int strlength = 0;
+        
+        strlength += sizeof(question.type);
+        strlength += sizeof(question.detail);
+        strlength += strlen(question.data);
+        strlength += sizeof(question.grade);
+                
+        char *sndString;
+        
+        sndString = (char *)malloc(strlength);
+        
+        sndString[0] = question.type;
+        sndString[1] = question.detail;
+        sndString[2] = question.grade;
+        strcat(sndString, question.data);        
+        
+        printf("%s %d\n", sndString, strlength);
+        /*
+        strcat(sndString, question.type);
+        strcat(sndString, question.detail);
+        strcat(sndString, question.data);
+        strcat(sndString, question.grade);
+        */
+        
         //-----------CP_QUESTION----------//
         
         //------보내고자 하는 패킷을 구성------//
         renew.type = '1';
         //-------------CP_RENEW-----------//
-             
+        /*     
         //패킷을 보낼때 필요한 버퍼의 크기를 구하고 send함수를 통해 question구조체를 전송
         size_t bufferLen = sizeof(question);
         ssize_t numBytesSent = send(c_socket, (char*)&question, bufferLen, 0);
@@ -90,10 +117,27 @@ main()
         //numBytesSent에는 send한 패킷의 크기가 반환되며 실패시 -1이 반환
         if(numBytesSent == -1)
         {
-             printf("question Send Error\n");
+             printf("Send Error\n");
              close(c_socket);
              return -1;
         }
+        */
+        
+        
+        ssize_t numBytesSent = send(c_socket, &sndString, strlength, 0);
+   
+        if(numBytesSent == -1)
+        {
+             printf("Send Error\n");
+             close(c_socket);
+             return -1;
+        }
+        
+        
+        
+        
+        
+        /*
         
         //RENEW 구조체에 대한 패킷 전송
         bufferLen = sizeof(renew);
@@ -101,10 +145,12 @@ main()
         
         if(numBytesSent == -1)
         {
-             printf("renew Send Error\n");
+             printf("Send Error\n");
              close(c_socket);
              return -1;
         }
+        */
+        
         
     }
 
