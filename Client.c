@@ -48,22 +48,25 @@ main()
     CP_Question question;
     CP_Renew renew;
    
-    c_socket = socket(PF_INET, SOCK_STREAM, 0);
     
     memset(&c_addr, 0, sizeof(c_addr));
     c_addr.sin_addr.s_addr = inet_addr("127.0.0.1");
     c_addr.sin_family = AF_INET;
     c_addr.sin_port = htons(8000);
     
-    if(connect(c_socket, (struct sockaddr*)&c_addr, sizeof(c_addr)) == -1)
-    {
-        printf("Can not connect\n");
-        close(c_socket);
-        return -1;
-    }
     
     while(1)
     {
+        // 매 패킷 전송마다 새로 연결 생성
+        c_socket = socket(PF_INET, SOCK_STREAM, 0);
+        if(connect(c_socket, (struct sockaddr*)&c_addr, sizeof(c_addr)) == -1)
+        {
+            printf("Can not connect\n");
+            close(c_socket);
+            return -1;
+        }
+        
+        
         //질문을 입력받아 sndBuffer에 입력
         printf("질문 : ");
         fgets(sndBuffer, sizeof(sndBuffer), stdin); 
@@ -75,8 +78,8 @@ main()
         //------보내고자 하는 패킷을 구성------//
         question.type = '0';
         question.detail = '0';
-        strcpy(question.data, sndBuffer);
         question.grade = '0';
+        strcpy(question.data, sndBuffer);
         
         
         //testing
@@ -84,8 +87,8 @@ main()
         
         strlength += sizeof(question.type);
         strlength += sizeof(question.detail);
-        strlength += strlen(question.data);
         strlength += sizeof(question.grade);
+        strlength += strlen(question.data);
                 
         char *sndString;
         
@@ -151,8 +154,8 @@ main()
         }
         */
         
+
+        close(c_socket);
         
     }
-
-    close(c_socket);
 }

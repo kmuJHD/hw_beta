@@ -41,6 +41,7 @@ main()
     
     while(1)
     {
+        // 매 패킷 전송이 끝나면 소켓을 닫고 새로 대기
         len = sizeof(c_addr);
         c_socket = accept(s_socket, (struct sockaddr*)&c_addr, &len);
         
