@@ -1,4 +1,5 @@
 all : server client
+	./server &
 
 server : server.c types.h
 	gcc server.c -o server
