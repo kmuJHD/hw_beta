@@ -112,7 +112,9 @@ main()
         //------보내고자 하는 패킷을 구성------//
         renew.type = '1';
         //-------------CP_RENEW-----------//
-        /*     
+        
+        
+        /*  폐기안 - 사용하지 않음
         //패킷을 보낼때 필요한 버퍼의 크기를 구하고 send함수를 통해 question구조체를 전송
         size_t bufferLen = sizeof(question);
         ssize_t numBytesSent = send(c_socket, (char*)&question, bufferLen, 0);
@@ -126,9 +128,16 @@ main()
         }
         */
         
-        
-        ssize_t numBytesSent = send(c_socket, &sndString, strlength, 0);
+        /*  개선안      
+        *   기존에 구조체를 전송하게 되면 낭비되는 byte가 많아서 동적 할당을 통해 문자열을 생성하고
+        *   패킷의 크기에 맞게 전송하도록 개선
+        */   
+        /*  패킷을 보낼때 send함수를 통해 동적 할당한 sndString 문자열을 전송 strlengths는
+        *   위에서 계산한 sndString의 크기임
+        */
+        ssize_t numBytesSent = send(c_socket, sndString, strlength, 0);
    
+        //numBytesSent에는 send한 패킷의 크기가 반환되며 실패시 -1이 반환
         if(numBytesSent == -1)
         {
              printf("Send Error\n");
@@ -136,14 +145,8 @@ main()
              return -1;
         }
         
-        
-        
-        
-        
-        /*
-        
-        //RENEW 구조체에 대한 패킷 전송
-        bufferLen = sizeof(renew);
+        //RENEW 구조체에 대한 패킷 전송 / 실제 1byte 크기
+        size_t bufferLen = sizeof(renew);
         numBytesSent = send(c_socket, (char*)&renew, bufferLen, 0);
         
         if(numBytesSent == -1)
@@ -152,10 +155,6 @@ main()
              close(c_socket);
              return -1;
         }
-        */
-        
-
         close(c_socket);
-        
     }
 }
