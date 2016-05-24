@@ -16,7 +16,7 @@ void Client_recvAnswer(int c_socket, char *rcvBuffer){
 	SP_Alternative recvModified;
 
 	printf("Answer>>");
-	/***********수신**************/
+	/***********송신**************/
 	if((bytesRcvd = recv(c_socket, rcvBuffer, BUFSIZE -1, 0)) < 0){
 		perror("recv() failed");
 		exit(1);
@@ -40,24 +40,29 @@ void Client_recvAnswer(int c_socket, char *rcvBuffer){
 	}
 }
 
-SP_Answer SplitPlainMsg(char *rcvBuffer){// 일반 응답 -> 구조체
+// 일반 응답 -> 구조체
+SP_Answer SplitPlainMsg(char *rcvBuffer){
 	SP_Answer recvAnswer;
 	recvAnswer.type = *rcvBuffer++;
 	recvAnswer.result = *rcvBuffer++;
 	recvAnswer.detail = *rcvBuffer++;
-	recvAnswer.data = rcvBuffer;
+	strcpy(recvAnswer.data, rcvBuffer);
+	//	recvAnswer.data = rcvBuffer;
 	return recvAnswer;
 }
 
-SP_Alternative SplitModifiedMsg(char *rcvBuffer){// 수정 응답 -> 구조체
+// 수정 응답 -> 구조체
+SP_Alternative SplitModifiedMsg(char *rcvBuffer){
 	SP_Alternative recvModified;
 	recvModified.type = *rcvBuffer++;
 	recvModified.accuracy = *rcvBuffer++;
-	recvModified.data = rcvBuffer;
+	strcpy(recvModified.data, rcvBuffer);
+//	recvModified.data = rcvBuffer;
 	return recvModified;
 }
 
-void PlainAnswerHandler(SP_Answer recvAnswer){// 일반 응답 처리
+// 일반 응답 처리
+void PlainAnswerHandler(SP_Answer recvAnswer){
 	switch(recvAnswer.result-'0'){
 		case ANSWER_SUCCESS:// Success
 			printf(" Detail LV : %c\n\t %s\n", recvAnswer.detail, recvAnswer.data);
