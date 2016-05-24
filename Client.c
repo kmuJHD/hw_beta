@@ -88,6 +88,7 @@ main()
         //fgets로 가져온 문자열을 끝에 줄바꿈문자가 들어가기 때문에 줄바굼 문자를 제거
         sndBuffer[strlen(sndBuffer) - 1] = '\0';
                 
+        ReNew(c_addr);
         SendQuestion(c_addr);
   
     }
@@ -200,13 +201,32 @@ void ReNew()
          return;
     }
     
-    /*
     while(1)
     {
-        //recv 동작에 대해 갱신 패킷 data를 분리하여 순위대로 출력구현(while문 내부에 구현 - 함수로 만들어도 상관 없음)
+        //===============================================================================================
+        //recv 동작에 대해 응답 패킷 또는 수정 패킷에대한 분류 및 출력구현(while문 내부에 구현 - 함수로 만들어도 상관 없음)
+        //===============================================================================================
+        ssize_t numBytesRcvd = recv(c_socket, rcvBuffer, BUFSIZE, 0);
+        if(numBytesRcvd == -1)
+        {
+            printf("Recv Error\n");
+            break;
+        }
+        else
+        {
+            rcvBuffer[numBytesRcvd] = '\0';
+         
+            // 디버깅용 패킷 표시   
+            printf("\n(Client)-Response Packet-\nPacketData : %s\n", rcvBuffer);
+            
+            break;
+        }
+        
+        //========================================
+        //이 아래에서 rcvBuffer를 지지고 볶으시면 됩니다.
+        //========================================
         
     }
-    */
     
     close(c_socket);
 }
