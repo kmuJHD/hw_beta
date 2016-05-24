@@ -41,12 +41,18 @@ typedef struct Qdata {
 	char detail[1024];
 }Qdata;
 
-char ranking[10][BUFSIZE];              // 랭킹 10위까지만 저장
+typedef struct Rank_data{
+    int total;
+    char keyword[32];
+}Rank_data;
+
+Rank_data ranking[10];              // 랭킹 10위까지만 저장
 struct Qdata qdata[4];
 int user_grade;
 
 
 void PacketManager(int c_socket, byte *buffer);
+void Rank_calc(char *keyword);
 SP_Answer Search(byte detail, byte grade, char *keyword);
 SP_RANK Rank_renew();
 
@@ -62,7 +68,7 @@ int main()
     int n;
     
     //=================================================
-    //  검색용 데이터 생성
+    //  검색용 데이터, 검색 순위 초기화
     //=================================================
 	sprintf(qdata[0].question, "%s", "wether");
 	sprintf(qdata[0].answer, "%s", "sunny");
@@ -80,6 +86,11 @@ int main()
 	sprintf(qdata[3].answer, "%s", "");
 	sprintf(qdata[3].detail, "%s", "");
     
+    for(n = 0; n < 10; ++n){
+        ranking[n].total = 0;
+        sprintf(ranking[n].keyword, "key'%d'", n);
+    }
+    n = 0;
     
     
     //=================================================
@@ -167,6 +178,7 @@ void PacketManager(int c_socket, byte *buffer){
     
     switch(buffer[0]){
         case CP_QUESTION:
+            Rank_calc(buffer+3);
             answer = Search(buffer[1], buffer[2], buffer+3);
             
             packet_length += sizeof(answer.type);
@@ -175,12 +187,12 @@ void PacketManager(int c_socket, byte *buffer){
             packet_length += strlen(answer.data);
             
             sndString = (char *)malloc(packet_length);
+            memset(sndString, 0, packet_length);
             
             sndString[0] = answer.type;
             sndString[1] = answer.result;
             sndString[2] = answer.detail;
             strcat(sndString, answer.data);
-            
             break;
         case CP_RENEW:
             rank = Rank_renew();
@@ -190,6 +202,7 @@ void PacketManager(int c_socket, byte *buffer){
             packet_length += strlen(rank.data);
             
             sndString = (char *)malloc(packet_length);
+            memset(sndString, 0, packet_length);
             
             sndString[0] = rank.type;
             strcat(sndString, rank.renew_time);
@@ -203,7 +216,7 @@ void PacketManager(int c_socket, byte *buffer){
     
     ssize_t numBytesSent = send(c_socket, sndString, packet_length, 0);
     //디버그용 메시지
-    printf("\n(Server)-Send-\n packet:%s length:%d Sentsize:%d\n", sndString, (int)packet_length, (int)numBytesSent);
+    printf("\n(Server)-Send-\n packet:'%s' length:%d Sentsize:%d\n", sndString, (int)packet_length, (int)numBytesSent);
 
     //numBytesSent에는 send한 패킷의 크기가 반환되며 실패시 -1이 반환
     if(numBytesSent == -1)
@@ -213,14 +226,64 @@ void PacketManager(int c_socket, byte *buffer){
     }
 }
 
+void Rank_calc(char *keyword){
+    // ==================================
+    // 동작 아직 제대로 안합니다. 수정필요.
+    // ==================================
+    
+    int exist = 0, i, j;
+    
+    
+    // 이미 검색어 순위에 있는 경우
+    for(i = 0; i < 10; ++i){
+        //if(ranking[i].total > 0) ranking[i].total--;
+        
+        if(strcmp(ranking[i].keyword, keyword) == 0){
+            printf("%s founded", ranking[i].keyword);
+            ranking[i].total += 1;
+            exist = 1;
+            break;
+        }
+    }
+    
+    if(exist == 0){
+        for(i = 0; i < 10; ++i){
+            if(ranking[i].total == 0){
+                ranking[i].total += 1;
+                sprintf(ranking[i].keyword, "%s", keyword);
+                // printf("%s added", ranking[i].keyword);
+                break;
+            }
+        }
+    }
+    
+    // 순위 정렬
+    
+    for(i = 0; i < 10; ++i){
+        for(j = 0; j < 10 - 1; ++j){
+            if(ranking[j].total < ranking[j+1].total){
+                Rank_data tmp = ranking[j];
+                ranking[j] = ranking[j+1];
+                ranking[j+1] = tmp;
+            }
+        }
+    }
+    
+    //디버그용 메시지
+    for(i = 0; i < 10; ++i){
+        printf("%d, %s\n", ranking[i].total, ranking[i].keyword);
+    }
+    
+    
+}
 
 SP_Answer Search(byte detail, byte grade, char *keyword){
     //디버그용 메시지
-    printf("\n(Server)-Search-\n detail:%c grade:%c keyword:%s\n",detail, grade, keyword);
+    printf("\n(Server)-Search-\n detail:%c grade:%c keyword:'%s'\n",detail, grade, keyword);
     
     SP_Answer answer;
     //=================================================
-    // 입력 키워드로 검색어 순위(ranking[10][]) 갱신
+    // 입력 키워드로 검색어 순위(ranking[10]) 갱신
     //=================================================
     
     
@@ -239,11 +302,30 @@ SP_Answer Search(byte detail, byte grade, char *keyword){
 
 
 SP_RANK Rank_renew(){
+    //디버그용 메시지
+    printf("\n(Server)-Renew-\n ranking[0].total:%d, ranking[0].keyword:'%s'\n", (int)ranking[0].total, ranking[0].keyword);
+    
     SP_RANK rank;
+    int i;
+    time_t tm_time;
+    struct tm *st_time;
 
+    time( &tm_time);
+    st_time = localtime( &tm_time);
     //=================================================
-    // ranking[10][] 읽어와서 SP_RANK형으로 반환
+    // ranking[10] 읽어와서 SP_RANK형으로 반환
     //=================================================
+    rank.type = SP_UNI_RANK;
+    
+    strftime(rank.renew_time, 17, "%Y/%m/%d/%H/%M/%S", st_time);
+    for(i = 0; i < 10; ++i){
+        
+        // sprintf(rank.data, "%s%c", rank.data, TOKEN);
+        // sprintf(rank.data, "%s%c", rank.data, ranking[i].total);
+        sprintf(rank.data, "%s%c", rank.data, TOKEN);
+        sprintf(rank.data, "%s%s", rank.data, ranking[i].keyword);
+        
+    }
     
     //ranking[10][BUFSIZE];
     return rank;

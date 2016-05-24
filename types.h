@@ -34,7 +34,7 @@
 //버프 크기
 #define BUFSIZE 1024
 // 연속되는 문자열 구분자
-#define TOKEN 0x03
+#define TOKEN '|'
 
 
 typedef unsigned char byte; 
