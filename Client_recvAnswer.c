@@ -16,7 +16,7 @@ void Client_recvAnswer(int c_socket, char *rcvBuffer){
 	SP_Alternative recvModified;
 
 	printf("Answer>>");
-	/***********송신**************/
+	/***********수신**************/
 	if((bytesRcvd = recv(c_socket, rcvBuffer, BUFSIZE -1, 0)) < 0){
 		perror("recv() failed");
 		exit(1);
