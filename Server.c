@@ -37,6 +37,30 @@ int main()
     char rcvBuffer[BUFSIZ];
     int n;
     
+    //=================================================
+    //  검색용 데이터 생성
+    //=================================================
+	sprintf(qdata[0].question, "%s", "wether");
+	sprintf(qdata[0].answer, "%s", "sunny");
+	sprintf(qdata[0].detail, "%s", "25 C, Humidity: 64%, Visibility: Very Good");
+
+	sprintf(qdata[1].question, "%s", "");
+	sprintf(qdata[1].answer, "%s", "");
+	sprintf(qdata[1].detail, "%s", "");
+
+	sprintf(qdata[2].question, "%s", "");
+	sprintf(qdata[2].answer, "%s", "");
+	sprintf(qdata[2].detail, "%s", "");
+
+	sprintf(qdata[3].question, "%s", "");
+	sprintf(qdata[3].answer, "%s", "");
+	sprintf(qdata[3].detail, "%s", "");
+    
+    
+    
+    //=================================================
+    // 소켓 전송 관련 초기화
+    //=================================================
     s_socket = socket(PF_INET, SOCK_STREAM, 0);
     
     memset(&s_addr, 0, sizeof(s_addr));
@@ -45,19 +69,25 @@ int main()
     s_addr.sin_port = htons(8000);
     
     
+    //=================================================
+    // 소켓 bind
+    //=================================================
     if(bind(s_socket, (struct sockaddr*) &s_addr, sizeof(s_addr)) == -1)
     {
         printf("Can not Bind\n");
         return -1;        
     }
     
+    //=================================================
+    // listen 시작
+    //=================================================
     if(listen(s_socket, 5) == -1)
     {
         printf("Listen Faile\n");
         return -1;
     }
     
-    signal(SIGCHLD, SIG_IGN);
+    signal(SIGCHLD, SIG_IGN);                   // 좀비 프로세스 방지용 child process signal 무시
     while(1)
     {
         // 매 패킷 입력마다 새로운 연결 생성
@@ -146,8 +176,10 @@ void PacketManager(int c_socket, byte *buffer){
             printf("잘못된 패킷 형태\n");
             return;
     }
-    //printf("%s %d\n", sndString, packet_length);
+    
     ssize_t numBytesSent = send(c_socket, sndString, packet_length, 0);
+    //디버그용 메시지
+    printf("\n-Send-\n packet:%s length:%ud Sentsize:%ud\n", sndString, (unsigned int)packet_length, (unsigned int)numBytesSent);
 
     //numBytesSent에는 send한 패킷의 크기가 반환되며 실패시 -1이 반환
     if(numBytesSent == -1)
@@ -159,10 +191,36 @@ void PacketManager(int c_socket, byte *buffer){
 
 
 SP_Answer Search(byte detail, byte grade, char *keyword){
-    printf("%c %c %s\n",detail, grade, keyword);        //테스트용
+    //디버그용 메시지
+    printf("\n-Search-\n detail:%c grade:%c keyword:%s\n",detail, grade, keyword);
+    
+    SP_Answer answer;
+    //=================================================
+    // 입력 키워드로 검색어 순위(ranking[10][]) 갱신
+    //=================================================
+    
+    
+    
+    
+    //=================================================
+    // 자료 검색 후 결과는 SP_Answer형으로 반환
+    //=================================================
+    answer.type = SP_ANSWER;
+    answer.result = ANSWER_NOTFOUND;
+    answer.detail = LOW;
+    sprintf(answer.data, "NOTFOUND");
+    
+    return answer;
 }
 
 
 SP_RANK Rank_renew(){
+    SP_RANK rank;
+
+    //=================================================
+    // ranking[10][] 읽어와서 SP_RANK형으로 반환
+    //=================================================
     
+    //ranking[10][BUFSIZE];
+    return rank;
 }
