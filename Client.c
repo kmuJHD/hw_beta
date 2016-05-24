@@ -128,7 +128,7 @@ void SendQuestion()
     strcat(sndString, question.data);        
      
     //test용 출력 - 동적 할당된 문자열
-    printf("%s %d\n", sndString, strlength);
+    printf("(Client)-Allocated String-\n%s %d\n", sndString, strlength);
     
     wait(1);
     
@@ -142,6 +142,16 @@ void SendQuestion()
          return;
     }
     
+    ssize_t numBytesRcvd = recv(c_socket, rcvBuffer, BUFSIZE, 0);
+    if(numBytesRcvd == -1)
+    {
+        printf("Recv Error\n");
+    }else{
+        rcvBuffer[numBytesRcvd] = '\0';
+        
+        // 디버깅용 패킷 표시   
+        printf("\n(Client)-Response Packet-\nPacketData : %s\n", rcvBuffer);
+    }
     /*
     while(1)
     {
@@ -176,7 +186,7 @@ void ReNew()
     size_t bufferLen = sizeof(renew);
     ssize_t numBytesSent = send(c_socket, (char*)&renew, bufferLen, 0);
         
-    printf("%d\n", numBytesSent);
+    printf("%d\n", (int)numBytesSent);
         
     if(numBytesSent == -1)
     {
