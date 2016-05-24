@@ -33,6 +33,8 @@
 
 //버프 크기
 #define BUFSIZE 1024
+// 연속되는 문자열 구분자
+#define TOKEN 0x03
 
 
 typedef unsigned char byte; 
@@ -71,9 +73,3 @@ typedef struct SP_RANK{
     byte renew_time[BUFSIZE];
     byte data[BUFSIZE];
 }SP_RANK;
-
-#ifndef TOKEN_H
-#define TOKEN_H
-// 연속되는 문자열 구분자
-byte TOKEN = 0x03;
-#endif
