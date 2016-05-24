@@ -35,7 +35,7 @@ void SendQuestion();
 void ReNew();
 
 void Client_recvAnswer(int c_socket, char *rcvBuffer);
-void Client_recvReNew(int c_socket);
+//void Client_recvReNew(int c_socket);
 
 /*
 types.h에 정의됨
