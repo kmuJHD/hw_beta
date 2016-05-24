@@ -34,7 +34,7 @@
 void SendQuestion();
 void ReNew();
 
-void Client_recvAnswer(int c_socket, char *rcvBuffer);
+void ClientRecvAnswer(int c_socket, char *rcvBuffer);
 //void Client_recvReNew(int c_socket);
 
 /*
@@ -161,7 +161,7 @@ void SendQuestion()
     {
         //recv 동작에 대해 응답 패킷 또는 수정 패킷에대한 분류 및 출력구현(while문 내부에 구현 - 함수로 만들어도 상관 없음)
       */
-        Client_recvAnswer(c_socket, rcvBuffer);
+        ClientRecvAnswer(c_socket, rcvBuffer);
       /*  
         
     }
