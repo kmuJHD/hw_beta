@@ -6,6 +6,7 @@
 #include <unistd.h>
 #include <netinet/in.h>
 #include <sys/socket.h>
+#include <sys/wait.h>
 #include <time.h>
 #include "types.h"
 
@@ -56,7 +57,7 @@ int main()
         return -1;
     }
     
-    
+    signal(SIGCHLD, SIG_IGN);
     while(1)
     {
         // 매 패킷 입력마다 새로운 연결 생성
@@ -96,7 +97,7 @@ int main()
             PacketManager(c_socket, rcvBuffer);
             
             close(c_socket);
-            return 0;
+            exit(0);
         }
     }
     close(s_socket);
