@@ -72,5 +72,8 @@ typedef struct SP_RANK{
     byte data[BUFSIZE];
 }SP_RANK;
 
+#ifndef TOKEN_H
+#define TOKEN_H
 // 연속되는 문자열 구분자
 byte TOKEN = 0x03;
+#endif
