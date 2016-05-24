@@ -10,7 +10,7 @@ void PlainAnswerHandler(SP_Answer recvAnswer);
 void ModifiedAnswerHandler(SP_Alternative recvModified);
 
 
-void Client_recvAnswer(int c_socket, char *rcvBuffer){
+void ClientRecvAnswer(int c_socket, char *rcvBuffer){
 	int bytesRcvd;
 	SP_Answer recvAnswer;
 	SP_Alternative recvModified;
@@ -26,12 +26,12 @@ void Client_recvAnswer(int c_socket, char *rcvBuffer){
 	close(c_socket);
 
 	/*********타입에 따른 처리***************/
-	switch(rcvBuffer[0]-'0'){
+	switch(rcvBuffer[0]){
 		case SP_ANSWER:// plain answer
 			recvAnswer = SplitPlainMsg(rcvBuffer);// 문자열 -> 구조체
 			PlainAnswerHandler(recvAnswer);// 구조체 처리
 			break;
-		case 1:// modified answer
+		case '1':// modified answer
 			recvModified = SplitModifiedMsg(rcvBuffer);// 문자열 -> 구조체
 			ModifiedAnswerHandler(recvModified);// 구조체 처리
 			break;
@@ -63,7 +63,7 @@ SP_Alternative SplitModifiedMsg(char *rcvBuffer){
 
 // 일반 응답 처리
 void PlainAnswerHandler(SP_Answer recvAnswer){
-	switch(recvAnswer.result-'0'){
+	switch(recvAnswer.result){
 		case ANSWER_SUCCESS:// Success
 			printf(" Detail LV : %c\n\t %s\n", recvAnswer.detail, recvAnswer.data);
 			break;
@@ -76,7 +76,8 @@ void PlainAnswerHandler(SP_Answer recvAnswer){
 	}
 }
 
-void ModifiedAnswerHandler(SP_Alternative recvModified){// 수정 응답 처리
+// 수정 응답 처리
+void ModifiedAnswerHandler(SP_Alternative recvModified){
 	switch(recvModified.accuracy-'0'){
 		
 	}	
