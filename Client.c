@@ -192,7 +192,7 @@ void ReNew()
     size_t bufferLen = sizeof(renew);
     ssize_t numBytesSent = send(c_socket, (char*)&renew, bufferLen, 0);
         
-    printf("%d\n", (int)numBytesSent);
+    //printf("%d\n", (int)numBytesSent);
         
     if(numBytesSent == -1)
     {
@@ -210,7 +210,7 @@ void ReNew()
         if(numBytesRcvd == -1)
         {
             printf("Recv Error\n");
-//            break;
+            // break;
 				return;
         }
         else
@@ -218,9 +218,9 @@ void ReNew()
             rcvBuffer[numBytesRcvd] = '\0';
          
             // 디버깅용 패킷 표시   
-            printf("\n(Client)-Response Packet: ReNew-\nPacketData : %s\n", rcvBuffer);
+            //printf("\n(Client)-Response Packet: ReNew-\nPacketData : %s\n", rcvBuffer);
             
-//            break;
+            // break;
         }
         
         //========================================

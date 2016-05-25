@@ -109,7 +109,7 @@ int main()
     
     for(n = 0; n < RANKMAX; ++n){
         ranking[n].total = 0;
-        sprintf(ranking[n].keyword, "key'%d'", n);
+        sprintf(ranking[n].keyword, "결과 없음");
     }
     n = 0;
     
@@ -271,7 +271,7 @@ void PacketManager(int c_socket, byte *buffer){
     
     ssize_t numBytesSent = send(c_socket, sndString, packet_length, 0);
     //디버그용 메시지
-    printf("\n(Server)-Send-\n packet:'%s' length:%d Sentsize:%d\n", sndString, (int)packet_length, (int)numBytesSent);
+    //printf("\n(Server)-Send-\n packet:'%s' length:%d Sentsize:%d\n", sndString, (int)packet_length, (int)numBytesSent);
 
     //numBytesSent에는 send한 패킷의 크기가 반환되며 실패시 -1이 반환
     if(numBytesSent == -1)
@@ -323,16 +323,16 @@ void Rank_calc(char *keyword){
     }
     
     //디버그용 메시지
-    for(i = 0; i < RANKMAX; ++i){
-        printf("%d, %s\n", ranking[i].total, ranking[i].keyword);
-    }
+    // for(i = 0; i < RANKMAX; ++i){
+    //     printf("%d, %s\n", ranking[i].total, ranking[i].keyword);
+    // }
     
     
 }
 
 SP_Answer Search(byte detail, byte grade, char *keyword){
     //디버그용 메시지
-    printf("\n(Server)-Search-\n detail:%c grade:%c keyword:'%s'\n",detail, grade, keyword);
+    //printf("\n(Server)-Search-\n detail:%c grade:%c keyword:'%s'\n",detail, grade, keyword);
     
     SP_Answer answer;
     //=================================================
