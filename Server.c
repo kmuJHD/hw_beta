@@ -335,9 +335,6 @@ SP_Answer Search(byte detail, byte grade, char *keyword){
     //printf("\n(Server)-Search-\n detail:%c grade:%c keyword:'%s'\n",detail, grade, keyword);
     
     SP_Answer answer;
-    //=================================================
-    // 입력 키워드로 검색어 순위(ranking[10]) 갱신
-    //=================================================
     
     
     
