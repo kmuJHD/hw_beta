@@ -31,8 +31,12 @@
 #include <netinet/in.h>
 #include <sys/socket.h>
 #include <sys/wait.h>
+#include <sys/ipc.h>
+#include <sys/shm.h>
 #include <time.h>
 #include "types.h"
+
+#define RANKMAX 10
 
 typedef struct Qdata {
 	int size;
@@ -46,13 +50,15 @@ typedef struct Rank_data{
     char keyword[32];
 }Rank_data;
 
-Rank_data ranking[10];              // 랭킹 10위까지만 저장
+int ranking_mem;
+Rank_data *ranking;              // 랭킹 RANKMAX(10위)까지만 저장
 struct Qdata qdata[4];
 int user_grade;
 
 
 void PacketManager(int c_socket, byte *buffer);
 void Rank_calc(char *keyword);
+void signalHandler(int signo);
 SP_Answer Search(byte detail, byte grade, char *keyword);
 SP_RANK Rank_renew();
 
@@ -86,12 +92,26 @@ int main()
 	sprintf(qdata[3].answer, "%s", "");
 	sprintf(qdata[3].detail, "%s", "");
     
-    for(n = 0; n < 10; ++n){
+    // =============================================================================
+    // 공유메모리 초기화
+    // =============================================================================
+    if((ranking_mem = shmget((key_t)1234, (sizeof(Rank_data) * RANKMAX), IPC_CREAT|0666)) == -1) {
+       perror("shmget failed");
+       exit(1);
+    }
+
+    if((ranking = shmat(ranking_mem, (void *)0, 0)) == (void *)-1) {
+       perror("shmat failed");
+       exit(1);
+    }
+
+    memset((char *)ranking, 0, (sizeof(Rank_data) * RANKMAX));
+    
+    for(n = 0; n < RANKMAX; ++n){
         ranking[n].total = 0;
         sprintf(ranking[n].keyword, "key'%d'", n);
     }
     n = 0;
-    
     
     //=================================================
     // 소켓 전송 관련 초기화
@@ -156,16 +176,51 @@ int main()
             }
             
             rcvBuffer[numBytesRcvd] = '\0';
+            // =============================================================================
+            // 공유메모리 처리
+            // =============================================================================
+            if((ranking_mem=shmget((key_t)1234, (sizeof(Rank_data) * RANKMAX), IPC_CREAT|0666)) == -1) {
+                perror("shmget failed");
+                exit(1);
+            }
+            if(shmdt(ranking) == -1) {
+                perror("shmdt failed");
+                exit(1);
+            }
+            if((ranking=shmat(ranking_mem, (void *)0, 0)) == (void *)-1) {
+                perror("shmat failed");
+                exit(1);
+            }
             
             // 패킷 분류 함수 호출
             //printf("Server : %s\n", rcvBuffer);     // 디버깅용 패킷 표시
             PacketManager(c_socket, rcvBuffer);
+            
+            // =============================================================================
+            // 공유메모리 분리
+            // =============================================================================
+            if(shmdt(ranking) == -1) {
+                perror("shmdt failed");
+                exit(1);
+            }
+            
             
             close(c_socket);
             exit(0);
         }
     }
     close(s_socket);
+    
+    if(shmdt(ranking) == -1) {
+       perror("shmdt failed");
+       exit(1);
+    }
+    if(shmctl(ranking_mem, IPC_RMID, 0) == -1) {
+       perror("shmctl failed");
+       exit(1);
+    }
+
+
 }
 
 void PacketManager(int c_socket, byte *buffer){
@@ -227,29 +282,27 @@ void PacketManager(int c_socket, byte *buffer){
 }
 
 void Rank_calc(char *keyword){
-    // ==================================
-    // 동작 아직 제대로 안합니다. 수정필요.
-    // ==================================
-    
     int exist = 0, i, j;
     
     
     // 이미 검색어 순위에 있는 경우
-    for(i = 0; i < 10; ++i){
-        //if(ranking[i].total > 0) ranking[i].total--;
-        
+    for(i = 0; i < RANKMAX; ++i){
         if(strcmp(ranking[i].keyword, keyword) == 0){
-            printf("%s founded", ranking[i].keyword);
-            ranking[i].total += 1;
+            //printf("%s founded", ranking[i].keyword);
+            ranking[i].total += 11;
             exist = 1;
             break;
         }
     }
     
     if(exist == 0){
-        for(i = 0; i < 10; ++i){
+        // 기존 검색어 비중 낮추기
+        for(i = 0; i < RANKMAX; ++i){
+            if(ranking[i].total > 0) ranking[i].total--;
+        } 
+        for(i = 0; i < RANKMAX; ++i){
             if(ranking[i].total == 0){
-                ranking[i].total += 1;
+                ranking[i].total += 11;
                 sprintf(ranking[i].keyword, "%s", keyword);
                 // printf("%s added", ranking[i].keyword);
                 break;
@@ -259,8 +312,8 @@ void Rank_calc(char *keyword){
     
     // 순위 정렬
     
-    for(i = 0; i < 10; ++i){
-        for(j = 0; j < 10 - 1; ++j){
+    for(i = 0; i < RANKMAX; ++i){
+        for(j = 0; j < RANKMAX - 1; ++j){
             if(ranking[j].total < ranking[j+1].total){
                 Rank_data tmp = ranking[j];
                 ranking[j] = ranking[j+1];
@@ -270,7 +323,7 @@ void Rank_calc(char *keyword){
     }
     
     //디버그용 메시지
-    for(i = 0; i < 10; ++i){
+    for(i = 0; i < RANKMAX; ++i){
         printf("%d, %s\n", ranking[i].total, ranking[i].keyword);
     }
     
@@ -303,7 +356,7 @@ SP_Answer Search(byte detail, byte grade, char *keyword){
 
 SP_RANK Rank_renew(){
     //디버그용 메시지
-    printf("\n(Server)-Renew-\n ranking[0].total:%d, ranking[0].keyword:'%s'\n", (int)ranking[0].total, ranking[0].keyword);
+    //printf("\n(Server)-Renew-\n ranking[0].total:%d, ranking[0].keyword:'%s'\n", (int)ranking[0].total, ranking[0].keyword);
     
     SP_RANK rank;
     int i;
@@ -318,7 +371,7 @@ SP_RANK Rank_renew(){
     rank.type = SP_UNI_RANK;
     
     strftime(rank.renew_time, 17, "%Y/%m/%d/%H/%M/%S", st_time);
-    for(i = 0; i < 10; ++i){
+    for(i = 0; i < RANKMAX; ++i){
         
         // sprintf(rank.data, "%s%c", rank.data, TOKEN);
         // sprintf(rank.data, "%s%c", rank.data, ranking[i].total);
