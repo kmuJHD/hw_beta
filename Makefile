@@ -1,8 +1,8 @@
 all : server client
 	./server &
 
-server : server.c types.h
-	gcc server.c -o server
+server : Server.c types.h
+	gcc Server.c -o server
 
 client : Client.c types.h Client_recvAnswer.o Client_recvReNew.o
 	gcc $^ -o client -g
