@@ -145,7 +145,7 @@ void SendQuestion()
          close(c_socket);
          return;
     }
-    
+    /* clientRecvAnswer() 함수에서 recv()동작
     ssize_t numBytesRcvd = recv(c_socket, rcvBuffer, BUFSIZE, 0);
     if(numBytesRcvd == -1)
     {
@@ -155,7 +155,7 @@ void SendQuestion()
         
         // 디버깅용 패킷 표시   
         printf("\n(Client)-Response Packet-\nPacketData : %s\n", rcvBuffer);
-    }
+    }*/
     /*
     while(1)
     {
