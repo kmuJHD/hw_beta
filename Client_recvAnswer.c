@@ -23,14 +23,12 @@ void clientRecvAnswer(int c_socket, char *rcvBuffer){
 		perror("recv() failed");/*수신 실패 처리*/
 		exit(1);
 	}
-
-	rcvBuffer[bytesRcvd] = '\0';/*문자열 마지막 NULL char 삽입*/
 	
+	rcvBuffer[bytesRcvd] = '\0';/*문자열 마지막 NULL char 삽입*/
 	close(c_socket);
 
 
 	printf("Answer>>");
-
 	/* TYPE 헤더에 따른 처리 */
 	switch(rcvBuffer[0]){
 		case SP_ANSWER:/* plain answer */
@@ -72,7 +70,7 @@ SP_Alternative splitModifiedMsg(char *rcvBuffer){
 }
 
 /*기본응답: 구조체를 이용한 기본응답 처리*/
-void plainAnswerHandler(SP_Answer rdcvAnswer){
+void plainAnswerHandler(SP_Answer rcvdAnswer){
 
 	switch(rcvdAnswer.result){
 		case ANSWER_SUCCESS:/*Success*/
