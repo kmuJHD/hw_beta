@@ -34,8 +34,8 @@
 void SendQuestion();
 void ReNew();
 
-void typeCheckerRcvdMsg(char *rcvBuffer);
-//void Client_recvReNew(int c_socket);
+void typeCheckerRcvdMsg(char *rcvBuffer);/* Client_recvAnswer.c 구현 */
+void typeCheckerRcvdRenew(char *rcvBuffer);/* Client_recvReNew.c 구현 */
 
 /*
 types.h에 정의됨
@@ -161,7 +161,7 @@ void SendQuestion()
     {
         //recv 동작에 대해 응답 패킷 또는 수정 패킷에대한 분류 및 출력구현(while문 내부에 구현 - 함수로 만들어도 상관 없음)
       */
-       typeCheckerRcvdMsg(rcvBuffer);
+	 typeCheckerRcvdMsg(rcvBuffer);
       /*  
         
     }
@@ -201,7 +201,7 @@ void ReNew()
          return;
     }
     
-    while(1)
+    //while(1)
     {
         //===============================================================================================
         //recv 동작에 대해 응답 패킷 또는 수정 패킷에대한 분류 및 출력구현(while문 내부에 구현 - 함수로 만들어도 상관 없음)
@@ -210,22 +210,24 @@ void ReNew()
         if(numBytesRcvd == -1)
         {
             printf("Recv Error\n");
-            break;
+//            break;
+				return;
         }
         else
         {
             rcvBuffer[numBytesRcvd] = '\0';
          
             // 디버깅용 패킷 표시   
-            printf("\n(Client)-Response Packet-\nPacketData : %s\n", rcvBuffer);
+            printf("\n(Client)-Response Packet: ReNew-\nPacketData : %s\n", rcvBuffer);
             
-            break;
+//            break;
         }
         
         //========================================
         //이 아래에서 rcvBuffer를 지지고 볶으시면 됩니다.
         //========================================
         
+		  typeCheckerRcvdRenew(rcvBuffer);
     }
     
     close(c_socket);
