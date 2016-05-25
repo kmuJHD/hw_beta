@@ -10,23 +10,23 @@ SP_Alternative splitModifiedMsg(char *rcvBuffer);/*버퍼 내용을 구조체로
 void plainAnswerHandler(SP_Answer rcvdAnswer);/*기본 응답 처리*/
 void modifiedAnswerHandler(SP_Alternative rcvdModified);/*수정 응답 처리*/
 
-/* 서버의 메세지를 수신하는 함수 */
-void clientRecvAnswer(int c_socket, char *rcvBuffer){
+/* 서버의 메세지를 Type에 따라 분류하는 함수 */
+void typeCheckerRcvdMsg(char *rcvBuffer){
 
-	int bytesRcvd;/*수신된 버퍼의 크기*/
+//	int bytesRcvd;/*수신된 버퍼의 크기*/
 
 	SP_Answer rcvdAnswer;/*기본 응답 메세지 구조체*/
 	SP_Alternative rcvdModified;/*수정 응답 메세지 구조체*/
 
 	/* 소켓 수신 */
-	if((bytesRcvd = recv(c_socket, rcvBuffer, BUFSIZE -1, 0)) < 0){
-		perror("recv() failed");/*수신 실패 처리*/
-		exit(1);
-	}
+//	if((bytesRcvd = recv(c_socket, rcvBuffer, BUFSIZE -1, 0)) < 0){
+//		perror("recv() failed");/*수신 실패 처리*/
+//		exit(1);
+//	}
 	
-	rcvBuffer[bytesRcvd] = '\0';/*문자열 마지막 NULL char 삽입*/
-	close(c_socket);
-
+//	rcvBuffer[bytesRcvd] = '\0';/*문자열 마지막 NULL char 삽입*/
+//	close(c_socket);
+	
 
 	printf("Answer>>");
 	/* TYPE 헤더에 따른 처리 */
