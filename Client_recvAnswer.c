@@ -36,7 +36,7 @@ void typeCheckerRcvdMsg(char *rcvBuffer){
 			plainAnswerHandler(rcvdAnswer);/*구조체를 이용한 기본응답 처리*/
 			break;
 
-		case '1':/* modified answer */
+		case SP_MODI:/* modified answer */
 			rcvdModified = splitModifiedMsg(rcvBuffer);/*버퍼 내용을 구조체로 변환*/
 			modifiedAnswerHandler(rcvdModified);/*구조체를 이용한 수정응답 처리*/
 			break;
@@ -63,7 +63,6 @@ SP_Alternative splitModifiedMsg(char *rcvBuffer){
 	SP_Alternative rcvdModified;
 
 	rcvdModified.type = *rcvBuffer++;
-	rcvdModified.accuracy = *rcvBuffer++;
 	strcpy(rcvdModified.data, rcvBuffer);
 
 	return rcvdModified;
@@ -89,7 +88,7 @@ void plainAnswerHandler(SP_Answer rcvdAnswer){
 
 /*수정응답: 구조체를 이용한 수정응답 처리*/
 void modifiedAnswerHandler(SP_Alternative rcvdModified){
-	switch(rcvdModified.accuracy-'0'){
-		
-	}	
+	
+		// 여기에 구현하시면 됩니다.
+		// 기본적으로 받아온 rcvdModified를 출력하는 형태입니다.
 }
