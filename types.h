@@ -21,7 +21,7 @@
 #define THI '2'
 
 #define SP_ANSWER '0'
-#define SP_MODI '1'
+//#define SP_수정된 질문 '1'
 #define SP_UNI '2'
 
 #define SP_UNI_KEYWORD '0'
@@ -64,6 +64,7 @@ typedef struct SP_Answer{
 
 typedef struct SP_Alternative{
     byte type;
+    byte accuracy;
     byte data[BUFSIZE];
 }SP_Alternative;
 
