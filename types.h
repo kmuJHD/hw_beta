@@ -62,7 +62,7 @@ typedef struct SP_Answer{
     byte data[BUFSIZE];
 }SP_Answer;
 
-typedef struct SP_Modify{
+typedef struct SP_Alternative{
     byte type;
     byte data[BUFSIZE];
 }SP_Modify;
