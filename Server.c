@@ -36,27 +36,13 @@
 #include <time.h>
 #include "types.h"
 
-#define RANKMAX 10
-
-typedef struct Qdata {
-	int size;
-	char question[32];
-	char answer[512];
-	char detail[1024];
-}Qdata;
-
-typedef struct Rank_data{
-    int total;
-    char keyword[32];
-}Rank_data;
-
 int ranking_mem;
 Rank_data *ranking;              // 랭킹 RANKMAX(10위)까지만 저장
 struct Qdata qdata[4];
 int user_grade;
 
-
-void PacketManager(int c_socket, byte *buffer);
+void getTime();
+void PacketManager(int c_socket,char buffer[]);
 void Rank_calc(char *keyword);
 void signalHandler(int signo);
 SP_Answer Search(byte detail, byte grade, char *keyword);
@@ -76,21 +62,25 @@ int main()
     //=================================================
     //  검색용 데이터, 검색 순위 초기화
     //=================================================
-	sprintf(qdata[0].question, "%s", "wether");
-	sprintf(qdata[0].answer, "%s", "sunny");
-	sprintf(qdata[0].detail, "%s", "25 C, Humidity: 64%, Visibility: Very Good");
+	sprintf(qdata[0].question, "%s", "weather");
+	sprintf(qdata[0].answer_low, "%s", "sunny");
+	sprintf(qdata[0].answer_mid, "%s", "25 C, Humidity: 64%, Visibility: Very Good");
+	sprintf(qdata[0].answer_high,"%s","Today's weather is sunny, 25 C. Humidity: 65%, Visibility : Very Good");
 
-	sprintf(qdata[1].question, "%s", "");
-	sprintf(qdata[1].answer, "%s", "");
-	sprintf(qdata[1].detail, "%s", "");
+	sprintf(qdata[1].question, "%s", "where");
+	sprintf(qdata[1].answer_low, "%s", "Republic of Korea");
+	sprintf(qdata[1].answer_mid, "%s", "Daegu, Republic of Korea");
+	sprintf(qdata[1].answer_high,"%s", "Dalseogu, Daegu, Republic of Korea");
 
-	sprintf(qdata[2].question, "%s", "");
-	sprintf(qdata[2].answer, "%s", "");
-	sprintf(qdata[2].detail, "%s", "");
+	sprintf(qdata[2].question, "%s", "seoul");
+	sprintf(qdata[2].answer_low, "%s", "Capital of Korea");
+	sprintf(qdata[2].answer_mid, "%s", "Capital of Korea, Population 10,000,000");
+	sprintf(qdata[2].answer_high,"%s","Capital of Korea, Population 10,000,000, GDP : US$ 34,355");
 
-	sprintf(qdata[3].question, "%s", "");
-	sprintf(qdata[3].answer, "%s", "");
-	sprintf(qdata[3].detail, "%s", "");
+	sprintf(qdata[3].question, "%s", "kmu");
+	sprintf(qdata[3].answer_low, "%s", "Located in Dalseogu, Daegu, Republic of Korea");
+	sprintf(qdata[3].answer_mid, "%s", "Located : Dalseogu,Daegu, Type :	Private");
+	sprintf(qdata[3].answer_high,"%s","Located : Dalseogu,Daegu, Type : Private, Student 27,000");
     
     // =============================================================================
     // 공유메모리 초기화
@@ -131,7 +121,10 @@ int main()
     {
         printf("Can not Bind\n");
         return -1;        
-    }
+    }else{
+		 getTime();
+		 printf("Bind\n");
+	 }
     
     //=================================================
     // listen 시작
@@ -140,7 +133,10 @@ int main()
     {
         printf("Listen Failed\n");
         return -1;
-    }
+    }else{
+		 getTime();
+		 printf("Listen\n");
+	 }
     
     signal(SIGCHLD, SIG_IGN);                   // 좀비 프로세스 방지용 child process signal 무시
     while(1)
@@ -173,7 +169,10 @@ int main()
             {
                 printf("Recv Error\n");
                 return -1;
-            }
+            }else{
+					getTime();
+					printf("Receved\n");
+				}
             
             rcvBuffer[numBytesRcvd] = '\0';
             // =============================================================================
@@ -193,7 +192,7 @@ int main()
             }
             
             // 패킷 분류 함수 호출
-            //printf("Server : %s\n", rcvBuffer);     // 디버깅용 패킷 표시
+            printf("Server : %s\n", rcvBuffer);     // 디버깅용 패킷 표시
             PacketManager(c_socket, rcvBuffer);
             
             // =============================================================================
@@ -223,17 +222,28 @@ int main()
 
 }
 
-void PacketManager(int c_socket, byte *buffer){
+void getTime(){
+	time_t s_time;
+	struct tm *day;
+	
+	time(&s_time);
+	day=localtime(&s_time);
+	printf("[%02d:%02d:%02d] Server : ",day->tm_hour,day->tm_min,day->tm_sec);
+}
+
+void PacketManager(int c_socket, char buffer[]){
     size_t packet_length = 0;           //전체 패킷 크기
     char *sndString;
     
     SP_Answer answer;
+	 SP_Modify modify;
     SP_RANK rank;
     
-    
+    //printf("Type : ");
     switch(buffer[0]){
-        case CP_QUESTION:
+        case CP_QUESTION: //질문
             Rank_calc(buffer+3);
+				//printf("Question\n");
             answer = Search(buffer[1], buffer[2], buffer+3);
             
             packet_length += sizeof(answer.type);
@@ -251,6 +261,7 @@ void PacketManager(int c_socket, byte *buffer){
             break;
         case CP_RENEW:
             rank = Rank_renew();
+				printf("Renew\n");
             
             packet_length += sizeof(rank.type);
             packet_length += strlen(rank.renew_time);
@@ -274,10 +285,9 @@ void PacketManager(int c_socket, byte *buffer){
     //printf("\n(Server)-Send-\n packet:'%s' length:%d Sentsize:%d\n", sndString, (int)packet_length, (int)numBytesSent);
 
     //numBytesSent에는 send한 패킷의 크기가 반환되며 실패시 -1이 반환
-    if(numBytesSent == -1)
-    {
-            printf("Send Error\n");
-            return;
+    if(numBytesSent == -1){
+		 printf("Send Error\n");
+		 return;
     }
 }
 
@@ -334,20 +344,39 @@ SP_Answer Search(byte detail, byte grade, char *keyword){
     //디버그용 메시지
     //printf("\n(Server)-Search-\n detail:%c grade:%c keyword:'%s'\n",detail, grade, keyword);
     
+	 int count=1;
     SP_Answer answer;
-    
-    
-    
-    
-    //=================================================
-    // 자료 검색 후 결과는 SP_Answer형으로 반환
-    //=================================================
-    answer.type = SP_ANSWER;
-    answer.result = ANSWER_NOTFOUND;
-    answer.detail = LOW;
-    sprintf(answer.data, "NOTFOUND");
-    
-    return answer;
+	 answer.type=SP_ANSWER;
+	 answer.detail=detail;
+
+	 for(int i=0;i<sizeof(qdata)/sizeof(qdata[1]);i++){
+		 if(!strcmp(keyword,qdata[i].question)){ //원하는 값이 있을때
+			 answer.result=ANSWER_SUCCESS;
+			 if(detail==LOW){
+				 sprintf(answer.data,qdata[i].answer_low);
+				return answer;
+
+			}else if(detail==MID){
+				sprintf(answer.data,qdata[i].answer_mid);
+				return answer;
+			}
+			 else if(detail==HIG){
+				sprintf(answer.data,qdata[i].answer_high);
+				return answer;
+			}
+		 }
+		 else{ //원하는 값을 찾지 못했을때
+			 count++;
+		 }
+
+		 if(count==sizeof(qdata)/sizeof(qdata[1])){ //마지막까지 원하는 값을 찾지 못했을때
+			 //printf("final count : %d\n",count);
+			 //printf("fail\n");
+			 answer.result=ANSWER_NOTFOUND;
+			 sprintf(answer.data,"NOTFOUND");
+			 return answer;
+		 }
+	 }
 }
 
 
