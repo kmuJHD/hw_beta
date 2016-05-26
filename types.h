@@ -65,7 +65,7 @@ typedef struct SP_Answer{
 typedef struct SP_Alternative{
     byte type;
     byte data[BUFSIZE];
-}SP_Modify;
+}SP_Alternative;
 
 typedef struct SP_RANK{
 	byte type;
