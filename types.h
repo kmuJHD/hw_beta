@@ -21,7 +21,7 @@
 #define THI '2'
 
 #define SP_ANSWER '0'
-#define SP_MODI '1'
+#define SP_MODIFY '1'
 #define SP_UNI '2'
 
 #define SP_UNI_KEYWORD '0'
@@ -35,7 +35,7 @@
 #define BUFSIZE 1024
 // 연속되는 문자열 구분자
 #define TOKEN '|'
-
+#define RANKMAX 10
 
 typedef unsigned char byte; 
 
@@ -62,13 +62,26 @@ typedef struct SP_Answer{
     byte data[BUFSIZE];
 }SP_Answer;
 
-typedef struct SP_Alternative{
+typedef struct SP_Modify{
     byte type;
     byte data[BUFSIZE];
-}SP_Alternative;
+}SP_Modify;
 
 typedef struct SP_RANK{
 	byte type;
     byte renew_time[BUFSIZE];
     byte data[BUFSIZE];
 }SP_RANK;
+
+typedef struct Qdata{
+	int size;
+	char question[32];
+	char answer_low[512];
+	char answer_mid[1024];
+	char answer_high[2048];
+}Qdata;
+
+typedef struct Rank_data{
+	int total;
+	char keyword[32];
+}Rank_data;
