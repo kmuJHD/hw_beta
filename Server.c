@@ -236,7 +236,7 @@ void PacketManager(int c_socket, char buffer[]){
     char *sndString;
     
     SP_Answer answer;
-	 SP_Modify modify;
+    SP_Alternative modify;
     SP_RANK rank;
     
     //printf("Type : ");
