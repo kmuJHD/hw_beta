@@ -31,7 +31,7 @@ void typeCheckerRcvdMsg(char *rcvBuffer){
 			
 			break;
 
-		case SP_MODI:/* modified answer */
+		case SP_MODIFY:/* modified answer */
 
 			/* 버퍼 내용을 구조체로 변환 */
 			rcvdModified = splitModifiedMsg(rcvBuffer);
