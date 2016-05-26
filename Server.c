@@ -367,7 +367,7 @@ SP_RANK Rank_renew(){
     //=================================================
     rank.type = SP_UNI_RANK;
     
-    strftime(rank.renew_time, 17, "%Y/%m/%d/%H/%M/%S", st_time);
+    strftime(rank.renew_time, 19, "%Y/%m/%d/%H/%M/%S", st_time);
     for(i = 0; i < RANKMAX; ++i){
         
         // sprintf(rank.data, "%s%c", rank.data, TOKEN);
