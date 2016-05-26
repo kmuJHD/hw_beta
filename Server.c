@@ -345,11 +345,12 @@ SP_Answer Search(byte detail, byte grade, char *keyword){
     //printf("\n(Server)-Search-\n detail:%c grade:%c keyword:'%s'\n",detail, grade, keyword);
     
 	 int count=1;
+	 int i;
     SP_Answer answer;
 	 answer.type=SP_ANSWER;
 	 answer.detail=detail;
 
-	 for(int i=0;i<sizeof(qdata)/sizeof(qdata[1]);i++){
+	 for(i=0;i<sizeof(qdata)/sizeof(qdata[1]);i++){
 		 if(!strcmp(keyword,qdata[i].question)){ //원하는 값이 있을때
 			 answer.result=ANSWER_SUCCESS;
 			 if(detail==LOW){
