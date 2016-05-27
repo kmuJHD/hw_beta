@@ -16,13 +16,13 @@ void typeCheckerRcvdMsg(char *rcvBuffer, int *loop){
 	SP_Answer rcvdAnswer;/*기본 응답 메세지 구조체*/
 	SP_Alternative rcvdModified;/*수정 응답 메세지 구조체*/
 
-	printf("Answer>> ");
 
 	/* TYPE 헤더에 따른 처리 */
 	switch(rcvBuffer[0]){
 
 		case SP_ANSWER:/* plain answer */
 
+			printf("Answer>> ");
 			/* 버퍼의 내용을 구조체로 변환 */
 			rcvdAnswer = splitPlainMsg(rcvBuffer);
 

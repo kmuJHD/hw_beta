@@ -37,9 +37,11 @@
 #include <time.h>
 #include "types.h"
 
+#define QDATA_SIZE 4
+
 int ranking_mem;
 Rank_data *ranking;              // 랭킹 RANKMAX(10위)까지만 저장
-struct Qdata qdata[5];
+struct Qdata qdata[QDATA_SIZE];
 int user_grade;
 
 void getTime();
@@ -332,7 +334,7 @@ void Rank_calc(char *keyword){
 }
 
 SP_Answer Search(byte detail, byte grade, char *keyword,int c_socket, int s_socket){
-	int count=1;
+	int count=0;
 	int i;
 	pid_t pid;
 	SP_Answer answer;
@@ -341,7 +343,7 @@ SP_Answer Search(byte detail, byte grade, char *keyword,int c_socket, int s_sock
 	answer.detail=detail;
 	char rcvBuffer[BUFSIZ];
 
-	for(i=0;i<sizeof(qdata)/sizeof(qdata[1])+1;i++){
+	for(i = 0; i < QDATA_SIZE; i++){
 		if(!strcmp(keyword,qdata[i].question)){             // 원하는 값이 있을때
 			answer.result=ANSWER_SUCCESS;
 			if(detail==LOW){
@@ -361,7 +363,7 @@ SP_Answer Search(byte detail, byte grade, char *keyword,int c_socket, int s_sock
 			count++;
 		}
 
-		if(count==sizeof(qdata)/sizeof(qdata[1])){          // 마지막까지 원하는 값을 찾지 못했을때
+		if(count == QDATA_SIZE){          // 마지막까지 원하는 값을 찾지 못했을때
         
 			if((pid=fork())==-1){
 				printf("Fork Error\n");
@@ -409,24 +411,22 @@ SP_Alternative Modify(char *keyword){
 	int nofound=0;
 	alter.type=SP_MODIFY;
 
-	for(i=0;i<sizeof(qdata)/sizeof(qdata[1]);i++){
+	for(i = 0; i < QDATA_SIZE; i++){
 		if(strstr(qdata[i].question,keyword)){
 			count++;
 			sprintf(st,"%d",count);
 			strcat(st,". ");
 			strcat(st,qdata[i].question);
-			strcat(st,"|");
-			printf("%s",st);
+            strcat(st,"|");
 			strcat(copy_st,st);
 		}else{
 			nofound++;
 		}
 	}
-	if(nofound==sizeof(qdata)/sizeof(qdata[1])){
-		sprintf(alter.data,"%s","NO PROPOSED MODIFICATION");
+	if(nofound == QDATA_SIZE){
+		sprintf(alter.data,"%s","제안된 검색어 없음");
 		return alter;
 	}else{
-		printf("st : %s",st);
 		sprintf(alter.data,"%s",copy_st);
 		return alter;
 	}
