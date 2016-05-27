@@ -84,9 +84,9 @@ void recvRenewHandler(SP_RANK rcvdRenew){
 
 	/* 순위 출력 */
 	while(strToken != NULL){
-		printf("\t  | %2d.| %s\n", i++, strToken);
+		printf("\t%2d. %s\n", i++, strToken);
 		strToken = strtok(NULL, "|");
 	}
 
-	printf("\t[ 갱신시간-->%s ]\n", rcvdRenew.renew_time);
+	printf("    [ 갱신시간-->%s ]\n", rcvdRenew.renew_time);
 }
