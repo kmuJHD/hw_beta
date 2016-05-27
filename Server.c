@@ -455,6 +455,7 @@ SP_Alternative Modify(char *keyword){
 	}
 	if(nofound==sizeof(qdata)/sizeof(qdata[1])){
 		sprintf(alter.data,"%s","NO PROPOSED MODIFICATION\n");
+
 		printf("alter : %s",alter.data);
 		return alter;
 	}else{
