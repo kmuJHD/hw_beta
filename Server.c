@@ -38,14 +38,16 @@
 
 int ranking_mem;
 Rank_data *ranking;              // 랭킹 RANKMAX(10위)까지만 저장
-struct Qdata qdata[4];
+struct Qdata qdata[5];
 int user_grade;
 
 void getTime();
-void PacketManager(int c_socket,char buffer[]);
+void PacketManager(int c_socket,char buffer[],int s_socket);
 void Rank_calc(char *keyword);
 void signalHandler(int signo);
-SP_Answer Search(byte detail, byte grade, char *keyword);
+SP_Answer Search(byte detail, byte grade, char *keyword,int c_socket,int
+		s_socket);
+SP_Alternative Modify(char *keyword);
 SP_RANK Rank_renew();
 
 
@@ -193,7 +195,7 @@ int main()
             
             // 패킷 분류 함수 호출
             printf("Server : %s\n", rcvBuffer);     // 디버깅용 패킷 표시
-            PacketManager(c_socket, rcvBuffer);
+            PacketManager(c_socket, rcvBuffer,s_socket);
             
             // =============================================================================
             // 공유메모리 분리
@@ -231,7 +233,7 @@ void getTime(){
 	printf("[%02d:%02d:%02d] Server : ",day->tm_hour,day->tm_min,day->tm_sec);
 }
 
-void PacketManager(int c_socket, char buffer[]){
+void PacketManager(int c_socket, char buffer[],int s_socket){
     size_t packet_length = 0;           //전체 패킷 크기
     char *sndString;
     
@@ -244,7 +246,7 @@ void PacketManager(int c_socket, char buffer[]){
         case CP_QUESTION: //질문
             Rank_calc(buffer+3);
 				//printf("Question\n");
-            answer = Search(buffer[1], buffer[2], buffer+3);
+            answer = Search(buffer[1], buffer[2], buffer+3, c_socket,s_socket);
             
             packet_length += sizeof(answer.type);
             packet_length += sizeof(answer.result);
@@ -340,29 +342,34 @@ void Rank_calc(char *keyword){
     
 }
 
-SP_Answer Search(byte detail, byte grade, char *keyword){
+SP_Answer Search(byte detail, byte grade, char *keyword,int c_socket, int s_socket){
     //디버그용 메시지
     //printf("\n(Server)-Search-\n detail:%c grade:%c keyword:'%s'\n",detail, grade, keyword);
     
 	 int count=1;
 	 int i;
+	 pid_t pid;
     SP_Answer answer;
+	 SP_Alternative alter;
 	 answer.type=SP_ANSWER;
 	 answer.detail=detail;
+	 char rcvBuffer[BUFSIZ];
 
-	 for(i=0;i<sizeof(qdata)/sizeof(qdata[1]);i++){
+	 for(i=0;i<sizeof(qdata)/sizeof(qdata[1])+1;i++){
+		 //question 확인용 메세지
+		 //printf("%s\n",qdata[i].question);
 		 if(!strcmp(keyword,qdata[i].question)){ //원하는 값이 있을때
 			 answer.result=ANSWER_SUCCESS;
 			 if(detail==LOW){
-				 sprintf(answer.data,qdata[i].answer_low);
+				 sprintf(answer.data,"%s",qdata[i].answer_low);
 				return answer;
 
 			}else if(detail==MID){
-				sprintf(answer.data,qdata[i].answer_mid);
+				sprintf(answer.data,"%s",qdata[i].answer_mid);
 				return answer;
 			}
 			 else if(detail==HIG){
-				sprintf(answer.data,qdata[i].answer_high);
+				sprintf(answer.data,"%s",qdata[i].answer_high);
 				return answer;
 			}
 		 }
@@ -373,13 +380,90 @@ SP_Answer Search(byte detail, byte grade, char *keyword){
 		 if(count==sizeof(qdata)/sizeof(qdata[1])){ //마지막까지 원하는 값을 찾지 못했을때
 			 //printf("final count : %d\n",count);
 			 //printf("fail\n");
-			 answer.result=ANSWER_NOTFOUND;
-			 sprintf(answer.data,"NOTFOUND");
-			 return answer;
+
+			 //ㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡ
+			 //이부분 fork()함수 사용법 잘 모르겠습니다.
+			 //ㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡ
+
+			 if((pid=fork())==-1){
+				 printf("Fork Error\n");
+				 continue;
+			 }else if(pid>0){ //부모 프로세스
+				 answer.result=ANSWER_NOTFOUND;
+				 sprintf(answer.data,"NOTFOUND");
+				 return answer;
+			 }else{ //자식 프로세스
+				 alter=Modify(keyword);
+				 ssize_t numBytesModiRcvd=recv(c_socket,rcvBuffer,BUFSIZ,0);
+				 if(numBytesModiRcvd==-1){
+					 printf("Recv Error\n");
+					 exit(1);
+				 }else{
+					 getTime();
+					 printf("Receved\n");
+				 }
+
+				 char modiBuffer[BUFSIZ];
+				 modiBuffer[numBytesModiRcvd]='\0';
+
+				 size_t packet_length=0;
+				 char *modString;
+
+				 packet_length+=sizeof(alter.type);
+				 packet_length+=strlen(answer.data);
+
+				 modString=(char *)malloc(packet_length);
+				 memset(modString,0,packet_length);
+
+				 modString[0]=alter.type;
+				 strcat(modString,alter.data);
+				 printf("modString : %s\n",modString);
+
+				 ssize_t numBytesModiSent=send(c_socket,modString,packet_length,0);
+				 if(numBytesModiSent==-1){
+					 getTime();
+					 printf("Send Error\n");
+					 exit(1);
+				 }
+				 close(c_socket);
+			 }
 		 }
 	 }
 }
 
+SP_Alternative Modify(char *keyword){
+	SP_Alternative alter;
+	int i;
+	char st[1024];
+	int count=0;
+	int nofound=0;
+	alter.type=SP_MODIFY;
+
+	//ㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡ
+	//alter에 계속해서 이상한 데이터 값이 추가되는데 왜그런지 잘 모르겠어요
+	//ㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡ
+	
+	for(i=0;i<sizeof(qdata)/sizeof(qdata[1]);i++){
+		if(strstr(qdata[i].question,keyword)){
+			count++;
+			sprintf(st,"%d",count);
+			strcat(st,". ");
+			strcat(st,qdata[i].question);
+			strcat(st,"\n");
+		}else{
+			nofound++;
+		}
+	}
+	if(nofound==sizeof(qdata)/sizeof(qdata[1])){
+		sprintf(alter.data,"%s","NO PROPOSED MODIFICATION\n");
+		printf("alter : %s",alter);
+		return alter;
+	}else{
+		printf("st : %s",st);
+		sprintf(alter.data,"%s",st);
+		return alter;
+	}
+}
 
 SP_RANK Rank_renew(){
     //디버그용 메시지
