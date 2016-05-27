@@ -174,7 +174,7 @@ int main()
                 return -1;
             }else{
 					getTime();
-					printf("Receved\n");
+					printf("Received\n");
 				}
             
             rcvBuffer[numBytesRcvd] = '\0';
@@ -344,123 +344,113 @@ void Rank_calc(char *keyword){
 }
 
 SP_Answer Search(byte detail, byte grade, char *keyword,int c_socket, int s_socket){
-    //디버그용 메시지
-    //printf("\n(Server)-Search-\n detail:%c grade:%c keyword:'%s'\n",detail, grade, keyword);
-    
-	 int count=1;
-	 int i;
-	 pid_t pid;
-     SP_Answer answer;
-	 SP_Alternative alter;
-	 answer.type=SP_ANSWER;
-	 answer.detail=detail;
-	 char rcvBuffer[BUFSIZ];
+	//디버그용 메시지
+	//printf("\n(Server)-Search-\n detail:%c grade:%c keyword:'%s'\n",detail, grade, keyword);
 
-	 for(i=0;i<sizeof(qdata)/sizeof(qdata[1])+1;i++){
-		 //question 확인용 메세지
-		 //printf("%s\n",qdata[i].question);
-		 if(!strcmp(keyword,qdata[i].question)){ //원하는 값이 있을때
-			 answer.result=ANSWER_SUCCESS;
-			 if(detail==LOW){
-				 sprintf(answer.data,"%s",qdata[i].answer_low);
+	int count=1;
+	int i;
+	pid_t pid;
+	SP_Answer answer;
+	SP_Alternative alter;
+	answer.type=SP_ANSWER;
+	answer.detail=detail;
+	char rcvBuffer[BUFSIZ];
+
+	for(i=0;i<sizeof(qdata)/sizeof(qdata[1])+1;i++){
+		//question 확인용 메세지
+		//printf("%s\n",qdata[i].question);
+		if(!strcmp(keyword,qdata[i].question)){ //원하는 값이 있을때
+			answer.result=ANSWER_SUCCESS;
+			if(detail==LOW){
+				sprintf(answer.data,"%s",qdata[i].answer_low);
 				return answer;
 
 			}else if(detail==MID){
 				sprintf(answer.data,"%s",qdata[i].answer_mid);
 				return answer;
 			}
-			 else if(detail==HIG){
+			else if(detail==HIG){
 				sprintf(answer.data,"%s",qdata[i].answer_high);
 				return answer;
 			}
-		 }
-		 else{ //원하는 값을 찾지 못했을때
-			 count++;
-		 }
+		}
+		else{ //원하는 값을 찾지 못했을때
+			count++;
+		}
 
-		 if(count==sizeof(qdata)/sizeof(qdata[1])){ //마지막까지 원하는 값을 찾지 못했을때
-			 //printf("final count : %d\n",count);
-			 //printf("fail\n");
+		if(count==sizeof(qdata)/sizeof(qdata[1])){ //마지막까지 원하는 값을 찾지 못했을때
+			//printf("final count : %d\n",count);
+			//printf("fail\n");
 
-			 //ㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡ
-			 //이부분 fork()함수 사용법 잘 모르겠습니다.
-			 //ㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡ
+			if((pid=fork())==-1){
+				printf("Fork Error\n");
+				continue;
+			}else if(pid>0){ //부모 프로세스
+				answer.result=ANSWER_NOTFOUND;
+				sprintf(answer.data,"NOTFOUND");
+				return answer;
+			}else{ //자식 프로세스
+				alter=Modify(keyword);
 
-			 if((pid=fork())==-1){
-				 printf("Fork Error\n");
-				 continue;
-			 }else if(pid>0){ //부모 프로세스
-				 answer.result=ANSWER_NOTFOUND;
-				 sprintf(answer.data,"NOTFOUND");
-                 return answer;
-			 }else{ //자식 프로세스
-				 alter=Modify(keyword);
-				                   
-                 char modiBuffer[BUFSIZ];
-				 
-				 size_t packet_length=0;
-				 char *modString;
+				char modiBuffer[BUFSIZ];
 
-				 packet_length+=sizeof(alter.type);
-				 packet_length+=strlen(alter.data);
+				size_t packet_length=0;
+				char *modString;
 
-				 modString=(char *)malloc(packet_length);
-				 memset(modString,0,packet_length);
+				packet_length+=sizeof(alter.type);
+				packet_length+=strlen(alter.data);
 
-                 modString[0] = alter.type;
-                 
-                 strcat(modString,alter.data);
-				
+				modString=(char *)malloc(packet_length);
+				memset(modString,0,packet_length);
+
+				modString[0] = alter.type;
+
+				strcat(modString,alter.data);
 
 
-                 printf("before send  and [%s]\n", modString);
-				 ssize_t numBytesModiSent=send(c_socket,modString,packet_length,0);
-				 if(numBytesModiSent==-1){
-					 getTime();
-					 printf("Send Error\n");
-                     
-					 exit(1);
-                                         
-				 }else{
-					 getTime();
-					 printf("Receved\n");
-				 }				 
-			 }
-		 }
-	 }
+
+				printf("before send  and [%s]\n", modString);
+				ssize_t numBytesModiSent=send(c_socket,modString,packet_length,0);
+				if(numBytesModiSent==-1){
+					getTime();
+					printf("Send Error\n");
+
+					exit(1);
+				}                               
+			}
+		}
+	}
 }
 
 SP_Alternative Modify(char *keyword){
 	SP_Alternative alter;
 	int i;
 	char st[1024];
+	char copy_st[1024];
 	int count=0;
 	int nofound=0;
 	alter.type=SP_MODIFY;
 
-	//ㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡ
-	//alter에 계속해서 이상한 데이터 값이 추가되는데 왜그런지 잘 모르겠어요
-	//ㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡ
-	
 	for(i=0;i<sizeof(qdata)/sizeof(qdata[1]);i++){
 		if(strstr(qdata[i].question,keyword)){
 			count++;
 			sprintf(st,"%d",count);
 			strcat(st,". ");
 			strcat(st,qdata[i].question);
-			strcat(st,"\n");
+			strcat(st,"|");
+			printf("%s",st);
+			strcat(copy_st,st);
 		}else{
 			nofound++;
 		}
 	}
 	if(nofound==sizeof(qdata)/sizeof(qdata[1])){
-		sprintf(alter.data,"%s","NO PROPOSED MODIFICATION\n");
-
+		sprintf(alter.data,"%s","NO PROPOSED MODIFICATION");
 		printf("alter : %s",alter.data);
 		return alter;
 	}else{
 		printf("st : %s",st);
-		sprintf(alter.data,"%s",st);
+		sprintf(alter.data,"%s",copy_st);
 		return alter;
 	}
 }
