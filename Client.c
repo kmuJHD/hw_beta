@@ -34,40 +34,12 @@
 void SendQuestion();
 void ReNew();
 
-void typeCheckerRcvdMsg(char *rcvBuffer);/* Client_recvAnswer.c 구현 */
+void typeCheckerRcvdMsg(char *rcvBuffer, int *loop);/* Client_recvAnswer.c 구현 */
 void typeCheckerRcvdRenew(char *rcvBuffer);/* Client_recvReNew.c 구현 */
-
-/*
-types.h에 정의됨
-
-typedef struct CP_Question{
-    byte type;
-    byte detail;
-    byte grade;
-    byte *data;
-}CP_Question;
-
-*Client 에서 보내는 패킷 type 
-#define CP_QUESTION 0
-#define CP_RENEW 1
-
-*상세수준
-#define LOW 0
-#define MID 1
-#define HIG 2
-
-*등급
-#define FIR 0
-#define SEC 1
-#define THI 2
-*/
-
 
 int c_socket;
 struct sockaddr_in c_addr;
 char sndBuffer[BUFSIZ], rcvBuffer[BUFSIZ];
-
-
 
 main()
 {
@@ -145,27 +117,28 @@ void SendQuestion()
          close(c_socket);
          return;
     }
+   
+    int loop = 0;
+    int con = 0;
+    ssize_t numBytesRcvd;
     
-    ssize_t numBytesRcvd = recv(c_socket, rcvBuffer, BUFSIZE, 0);
-    if(numBytesRcvd == -1)
+    do
     {
-        printf("Recv Error\n");
-    }else{
-        rcvBuffer[numBytesRcvd] = '\0';
+        numBytesRcvd = recv(c_socket, rcvBuffer, BUFSIZE, 0);
+        if(numBytesRcvd == -1)
+        {
+            printf("Recv Error\n");
+        }else{
+            rcvBuffer[numBytesRcvd] = '\0';
         
         // 디버깅용 패킷 표시   
         printf("\n(Client)-Response Packet-\nPacketData : %s\n", rcvBuffer);
-    }
-    /*
-    while(1)
-    {
-        //recv 동작에 대해 응답 패킷 또는 수정 패킷에대한 분류 및 출력구현(while문 내부에 구현 - 함수로 만들어도 상관 없음)
-      */
-	 typeCheckerRcvdMsg(rcvBuffer);
-      /*  
+        }
+                
+	    typeCheckerRcvdMsg(rcvBuffer, &loop);
         
-    }
-    */
+    }while(loop);
+
        
     close(c_socket);
 }

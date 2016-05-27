@@ -30,6 +30,7 @@
 #include <unistd.h>
 #include <netinet/in.h>
 #include <sys/socket.h>
+#include <sys/types.h>
 #include <sys/wait.h>
 #include <sys/ipc.h>
 #include <sys/shm.h>
@@ -349,7 +350,7 @@ SP_Answer Search(byte detail, byte grade, char *keyword,int c_socket, int s_sock
 	 int count=1;
 	 int i;
 	 pid_t pid;
-    SP_Answer answer;
+     SP_Answer answer;
 	 SP_Alternative alter;
 	 answer.type=SP_ANSWER;
 	 answer.detail=detail;
@@ -391,41 +392,39 @@ SP_Answer Search(byte detail, byte grade, char *keyword,int c_socket, int s_sock
 			 }else if(pid>0){ //부모 프로세스
 				 answer.result=ANSWER_NOTFOUND;
 				 sprintf(answer.data,"NOTFOUND");
-				 return answer;
+                 return answer;
 			 }else{ //자식 프로세스
 				 alter=Modify(keyword);
-				 ssize_t numBytesModiRcvd=recv(c_socket,rcvBuffer,BUFSIZ,0);
-				 if(numBytesModiRcvd==-1){
-					 printf("Recv Error\n");
-					 exit(1);
-				 }else{
-					 getTime();
-					 printf("Receved\n");
-				 }
-
-				 char modiBuffer[BUFSIZ];
-				 modiBuffer[numBytesModiRcvd]='\0';
-
+				                   
+                 char modiBuffer[BUFSIZ];
+				 
 				 size_t packet_length=0;
 				 char *modString;
 
 				 packet_length+=sizeof(alter.type);
-				 packet_length+=strlen(answer.data);
+				 packet_length+=strlen(alter.data);
 
 				 modString=(char *)malloc(packet_length);
 				 memset(modString,0,packet_length);
 
-				 modString[0]=alter.type;
-				 strcat(modString,alter.data);
-				 printf("modString : %s\n",modString);
+                 modString[0] = alter.type;
+                 
+                 strcat(modString,alter.data);
+				
 
+
+                 printf("before send  and [%s]\n", modString);
 				 ssize_t numBytesModiSent=send(c_socket,modString,packet_length,0);
 				 if(numBytesModiSent==-1){
 					 getTime();
 					 printf("Send Error\n");
+                     
 					 exit(1);
-				 }
-				 close(c_socket);
+                                         
+				 }else{
+					 getTime();
+					 printf("Receved\n");
+				 }				 
 			 }
 		 }
 	 }
@@ -456,7 +455,7 @@ SP_Alternative Modify(char *keyword){
 	}
 	if(nofound==sizeof(qdata)/sizeof(qdata[1])){
 		sprintf(alter.data,"%s","NO PROPOSED MODIFICATION\n");
-		printf("alter : %s",alter);
+		printf("alter : %s",alter.data);
 		return alter;
 	}else{
 		printf("st : %s",st);

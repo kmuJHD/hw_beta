@@ -7,11 +7,11 @@
 SP_Answer splitPlainMsg(char *rcvBuffer);/*버퍼 내용을 구조체로 변환하는 함수*/
 SP_Alternative splitModifiedMsg(char *rcvBuffer);/*버퍼 내용을 구조체로 변환하는 함수*/
 
-void plainAnswerHandler(SP_Answer rcvdAnswer);/*기본 응답 처리*/
+void plainAnswerHandler(SP_Answer rcvdAnswer, int *loop);/*기본 응답 처리*/
 void modifiedAnswerHandler(SP_Alternative rcvdModified);/*수정 응답 처리*/
 
 /* 서버의 메세지를 Type에 따라 분류하는 함수 */
-void typeCheckerRcvdMsg(char *rcvBuffer){
+void typeCheckerRcvdMsg(char *rcvBuffer, int *loop){
 
 	SP_Answer rcvdAnswer;/*기본 응답 메세지 구조체*/
 	SP_Alternative rcvdModified;/*수정 응답 메세지 구조체*/
@@ -27,7 +27,7 @@ void typeCheckerRcvdMsg(char *rcvBuffer){
 			rcvdAnswer = splitPlainMsg(rcvBuffer);
 
 			/* 구조체를 이용한 기본응답 처리 */
-			plainAnswerHandler(rcvdAnswer);
+			plainAnswerHandler(rcvdAnswer, loop);
 			
 			break;
 
@@ -38,6 +38,7 @@ void typeCheckerRcvdMsg(char *rcvBuffer){
 
 			/* 구조체를 이용한 수정응답 처리 */
 			modifiedAnswerHandler(rcvdModified);
+			*loop = 0;
 			
 			break;
 
@@ -84,7 +85,7 @@ SP_Alternative splitModifiedMsg(char *rcvBuffer){
 }
 
 /*기본응답: 구조체를 이용한 기본응답 처리*/
-void plainAnswerHandler(SP_Answer rcvdAnswer){
+void plainAnswerHandler(SP_Answer rcvdAnswer, int *loop){
 
 	/* result 값에 따른 처리 */
 	switch(rcvdAnswer.result){
@@ -95,6 +96,7 @@ void plainAnswerHandler(SP_Answer rcvdAnswer){
 
 		case ANSWER_NOTFOUND:/* Not Found */
 			printf(" 요청에 대한 결과를 찾을 수 없습니다.\n");
+			*loop = 1;
 			break;
 
 		case ANSWER_GRADELOW:/* Permission deny */
