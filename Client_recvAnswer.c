@@ -16,7 +16,7 @@ void typeCheckerRcvdMsg(char *rcvBuffer, int *loop){
 	SP_Answer rcvdAnswer;/*기본 응답 메세지 구조체*/
 	SP_Alternative rcvdModified;/*수정 응답 메세지 구조체*/
 
-	printf("Answer>>");
+	printf("Answer>> ");
 
 	/* TYPE 헤더에 따른 처리 */
 	switch(rcvBuffer[0]){
@@ -32,6 +32,8 @@ void typeCheckerRcvdMsg(char *rcvBuffer, int *loop){
 			break;
 
 		case SP_MODIFY:/* modified answer */
+
+			printf("Not Found!\n");
 
 			/* 버퍼 내용을 구조체로 변환 */
 			rcvdModified = splitModifiedMsg(rcvBuffer);
@@ -107,7 +109,19 @@ void plainAnswerHandler(SP_Answer rcvdAnswer, int *loop){
 
 /*수정응답: 구조체를 이용한 수정응답 처리*/
 void modifiedAnswerHandler(SP_Alternative rcvdModified){
-	printf("(Client Modi) %s\n", rcvdModified.data);
+	
+	char *strToken;
+	
+	printf("\t<< 다른 검색어 제안 >>\n");
+
+	/* TOKEN으로 구분 */
+	strToken = strtok(rcvdModified.data, "|");
+
+	while(strToken != NULL){
+		printf("\t  %s\n", strToken);
+		strToken = strtok(NULL, "|");
+	}
+
 		// 여기에 구현하시면 됩니다.
 		// 기본적으로 받아온 rcvdModified를 출력하는 형태입니다.
 }
