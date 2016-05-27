@@ -62,6 +62,9 @@ int main()
     char rcvBuffer[BUFSIZ];
     int n;
     
+    printf("\n");
+    getTime();
+    printf("Initializing...\n");
     //=================================================
     //  검색용 데이터, 검색 순위 초기화
     //=================================================
@@ -195,7 +198,6 @@ int main()
             }
             
             // 패킷 분류 함수 호출
-            printf("Server : %s\n", rcvBuffer);     // 디버깅용 패킷 표시
             PacketManager(c_socket, rcvBuffer,s_socket);
             
             // =============================================================================
@@ -235,18 +237,16 @@ void getTime(){
 }
 
 void PacketManager(int c_socket, char buffer[],int s_socket){
-    size_t packet_length = 0;           //전체 패킷 크기
+    size_t packet_length = 0;               // 전체 패킷 크기
     char *sndString;
     
     SP_Answer answer;
     SP_Alternative modify;
     SP_RANK rank;
     
-    //printf("Type : ");
     switch(buffer[0]){
-        case CP_QUESTION: //질문
+        case CP_QUESTION:                   // 질문
             Rank_calc(buffer+3);
-				//printf("Question\n");
             answer = Search(buffer[1], buffer[2], buffer+3, c_socket,s_socket);
             
             packet_length += sizeof(answer.type);
@@ -264,7 +264,6 @@ void PacketManager(int c_socket, char buffer[],int s_socket){
             break;
         case CP_RENEW:
             rank = Rank_renew();
-				printf("Renew\n");
             
             packet_length += sizeof(rank.type);
             packet_length += strlen(rank.renew_time);
@@ -284,10 +283,8 @@ void PacketManager(int c_socket, char buffer[],int s_socket){
     }
     
     ssize_t numBytesSent = send(c_socket, sndString, packet_length, 0);
-    //디버그용 메시지
-    //printf("\n(Server)-Send-\n packet:'%s' length:%d Sentsize:%d\n", sndString, (int)packet_length, (int)numBytesSent);
-
-    //numBytesSent에는 send한 패킷의 크기가 반환되며 실패시 -1이 반환
+    
+    // numBytesSent에는 send한 패킷의 크기가 반환되며 실패시 -1이 반환
     if(numBytesSent == -1){
 		 printf("Send Error\n");
 		 return;
@@ -301,7 +298,6 @@ void Rank_calc(char *keyword){
     // 이미 검색어 순위에 있는 경우
     for(i = 0; i < RANKMAX; ++i){
         if(strcmp(ranking[i].keyword, keyword) == 0){
-            //printf("%s founded", ranking[i].keyword);
             ranking[i].total += 11;
             exist = 1;
             break;
@@ -317,7 +313,6 @@ void Rank_calc(char *keyword){
             if(ranking[i].total == 0){
                 ranking[i].total += 11;
                 sprintf(ranking[i].keyword, "%s", keyword);
-                // printf("%s added", ranking[i].keyword);
                 break;
             }
         }
@@ -334,19 +329,9 @@ void Rank_calc(char *keyword){
             }
         }
     }
-    
-    //디버그용 메시지
-    // for(i = 0; i < RANKMAX; ++i){
-    //     printf("%d, %s\n", ranking[i].total, ranking[i].keyword);
-    // }
-    
-    
 }
 
 SP_Answer Search(byte detail, byte grade, char *keyword,int c_socket, int s_socket){
-	//디버그용 메시지
-	//printf("\n(Server)-Search-\n detail:%c grade:%c keyword:'%s'\n",detail, grade, keyword);
-
 	int count=1;
 	int i;
 	pid_t pid;
@@ -357,9 +342,7 @@ SP_Answer Search(byte detail, byte grade, char *keyword,int c_socket, int s_sock
 	char rcvBuffer[BUFSIZ];
 
 	for(i=0;i<sizeof(qdata)/sizeof(qdata[1])+1;i++){
-		//question 확인용 메세지
-		//printf("%s\n",qdata[i].question);
-		if(!strcmp(keyword,qdata[i].question)){ //원하는 값이 있을때
+		if(!strcmp(keyword,qdata[i].question)){             // 원하는 값이 있을때
 			answer.result=ANSWER_SUCCESS;
 			if(detail==LOW){
 				sprintf(answer.data,"%s",qdata[i].answer_low);
@@ -374,22 +357,20 @@ SP_Answer Search(byte detail, byte grade, char *keyword,int c_socket, int s_sock
 				return answer;
 			}
 		}
-		else{ //원하는 값을 찾지 못했을때
+		else{                                               // 원하는 값을 찾지 못했을때
 			count++;
 		}
 
-		if(count==sizeof(qdata)/sizeof(qdata[1])){ //마지막까지 원하는 값을 찾지 못했을때
-			//printf("final count : %d\n",count);
-			//printf("fail\n");
-
+		if(count==sizeof(qdata)/sizeof(qdata[1])){          // 마지막까지 원하는 값을 찾지 못했을때
+        
 			if((pid=fork())==-1){
 				printf("Fork Error\n");
 				continue;
-			}else if(pid>0){ //부모 프로세스
+			}else if(pid>0){                                // 부모 프로세스
 				answer.result=ANSWER_NOTFOUND;
 				sprintf(answer.data,"NOTFOUND");
 				return answer;
-			}else{ //자식 프로세스
+			}else{                                          // 자식 프로세스
 				alter=Modify(keyword);
 
 				char modiBuffer[BUFSIZ];
@@ -407,9 +388,6 @@ SP_Answer Search(byte detail, byte grade, char *keyword,int c_socket, int s_sock
 
 				strcat(modString,alter.data);
 
-
-
-				printf("before send  and [%s]\n", modString);
 				ssize_t numBytesModiSent=send(c_socket,modString,packet_length,0);
 				if(numBytesModiSent==-1){
 					getTime();
@@ -446,7 +424,6 @@ SP_Alternative Modify(char *keyword){
 	}
 	if(nofound==sizeof(qdata)/sizeof(qdata[1])){
 		sprintf(alter.data,"%s","NO PROPOSED MODIFICATION");
-		printf("alter : %s",alter.data);
 		return alter;
 	}else{
 		printf("st : %s",st);
@@ -456,9 +433,6 @@ SP_Alternative Modify(char *keyword){
 }
 
 SP_RANK Rank_renew(){
-    //디버그용 메시지
-    //printf("\n(Server)-Renew-\n ranking[0].total:%d, ranking[0].keyword:'%s'\n", (int)ranking[0].total, ranking[0].keyword);
-    
     SP_RANK rank;
     int i;
     time_t tm_time;
@@ -474,13 +448,10 @@ SP_RANK Rank_renew(){
     strftime(rank.renew_time, 20, "%Y/%m/%d/%H/%M/%S", st_time);
     for(i = 0; i < RANKMAX; ++i){
         
-        // sprintf(rank.data, "%s%c", rank.data, TOKEN);
-        // sprintf(rank.data, "%s%c", rank.data, ranking[i].total);
         sprintf(rank.data, "%s%c", rank.data, TOKEN);
         sprintf(rank.data, "%s%s", rank.data, ranking[i].keyword);
         
     }
     
-    //ranking[10][BUFSIZE];
     return rank;
 }

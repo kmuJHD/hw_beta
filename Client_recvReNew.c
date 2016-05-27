@@ -23,15 +23,9 @@ void typeCheckerRcvdRenew(char *rcvBuffer){
 
 			/* SP_RANK 구조체를 이용해 내용 출력 */
 			recvRenewHandler(rcvdRenew);
-
-			/* 디버깅 */
-//			printf("(TypechckerReNew)-->%s<--\n",rcvBuffer);
-//			printf("(SP_RANK) .type:%d || .time:%s || data:%s\n", rcvdRenew.type, rcvdRenew.renew_time, rcvdRenew.data);
-			
 			break;
 	
-			/* 기능 미정 */
-		default:
+		default:/* 기능 미정 */
 			return;
 	}
 

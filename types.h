@@ -6,16 +6,16 @@
 */
 
 
-//Client 에서 보내는 패킷 type 
+// Client 에서 보내는 패킷 type 
 #define CP_QUESTION '0'
 #define CP_RENEW '1'
 
-//상세수준
+// 상세수준
 #define LOW '0'
 #define MID '1'
 #define HIG '2'
 
-//등급
+// 등급
 #define FIR '0'
 #define SEC '1'
 #define THI '2'
@@ -31,7 +31,7 @@
 #define ANSWER_NOTFOUND '1'
 #define ANSWER_GRADELOW '2' 
 
-//버프 크기
+// 버프 크기
 #define BUFSIZE 1024
 // 연속되는 문자열 구분자
 #define TOKEN '|'

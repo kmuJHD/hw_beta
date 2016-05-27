@@ -33,7 +33,6 @@ void typeCheckerRcvdMsg(char *rcvBuffer, int *loop){
 
 		case SP_MODIFY:/* modified answer */
 
-			printf("Not Found!\n");
 
 			/* 버퍼 내용을 구조체로 변환 */
 			rcvdModified = splitModifiedMsg(rcvBuffer);
@@ -43,9 +42,6 @@ void typeCheckerRcvdMsg(char *rcvBuffer, int *loop){
 			*loop = 0;
 			
 			break;
-
-//		case SP_UNI:/* 미사용 헤더 SP_UNI */
-//			break;
 
 		default:
 			return;
@@ -122,6 +118,4 @@ void modifiedAnswerHandler(SP_Alternative rcvdModified){
 		strToken = strtok(NULL, "|");
 	}
 
-		// 여기에 구현하시면 됩니다.
-		// 기본적으로 받아온 rcvdModified를 출력하는 형태입니다.
 }
