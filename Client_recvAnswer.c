@@ -105,7 +105,7 @@ void plainAnswerHandler(SP_Answer rcvdAnswer){
 
 /*수정응답: 구조체를 이용한 수정응답 처리*/
 void modifiedAnswerHandler(SP_Alternative rcvdModified){
-	
+	printf("(Client Modi) %s\n", rcvdModified.data);
 		// 여기에 구현하시면 됩니다.
 		// 기본적으로 받아온 rcvdModified를 출력하는 형태입니다.
 }
