@@ -410,7 +410,7 @@ SP_Answer Search(byte detail, byte grade, char *keyword,int c_socket, int s_sock
 				 char *modString;
 
 				 packet_length+=sizeof(alter.type);
-				 packet_length+=strlen(answer.data);
+				 packet_length+=strlen(alter.data);
 
 				 modString=(char *)malloc(packet_length);
 				 memset(modString,0,packet_length);
@@ -456,7 +456,6 @@ SP_Alternative Modify(char *keyword){
 	}
 	if(nofound==sizeof(qdata)/sizeof(qdata[1])){
 		sprintf(alter.data,"%s","NO PROPOSED MODIFICATION\n");
-		printf("alter : %s",alter);
 		return alter;
 	}else{
 		printf("st : %s",st);
