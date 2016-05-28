@@ -1,6 +1,5 @@
 /*
 *   Server.c
-*   전현덕 김기윤 표지혜
 *   
 *   Warning
 *   Linux 기반이므로 window 환경에서는 실행이 되지 않습니다.
