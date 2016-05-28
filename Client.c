@@ -1,6 +1,6 @@
 /*
 *   Client.c
-*   홍현표 김상원 조심재
+*
 *   Warning
 *   Linux 기반이므로 window 환경에서는 실행이 되지 않습니다.
 *   
@@ -41,6 +41,9 @@ int c_socket;
 struct sockaddr_in c_addr;
 char sndBuffer[BUFSIZ], rcvBuffer[BUFSIZ];
 
+int detail = 0;
+int grade = 0;
+
 main()
 {
     int len;
@@ -78,14 +81,16 @@ void SendQuestion()
         close(c_socket);
         return;
     }
-   
+ 
     //------보내고자 하는 패킷을 구성(예제)------//
     question.type = '0';
-    question.detail = '0';
+    question.detail = detail++ + 0x30;
     strcpy(question.data, sndBuffer);
-    question.grade = '0';
+    question.grade = grade++ + 0x30;
     
-        
+    detail %= 3;
+    grade %= 3;
+       
     //어디까지나 예제로 변경될 수 있으나 기본적으로 문자열 형태로 변환하여 서버에 전송함
     int strlength = 0;
         
