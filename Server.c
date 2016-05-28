@@ -47,8 +47,7 @@ void getTime();
 void PacketManager(int c_socket,char buffer[],int s_socket);
 void Rank_calc(char *keyword);
 void signalHandler(int signo);
-SP_Answer Search(byte detail, byte grade, char *keyword,int c_socket,int
-		s_socket);
+SP_Answer Search(byte detail, byte grade, char *keyword,int c_socket,int s_socket);
 SP_Alternative Modify(char *keyword);
 SP_RANK Rank_renew();
 
